@@ -28,11 +28,17 @@ jobs:
         with:
          creds: ${{ secrets.AZURE_CREDENTIALS_GITHUB_SECRET }}
 
+      - name: Setup ssh for VM
+        run: az vm user update -u sshUser --ssh-key-value "${{ secrets.SSH_KEY }}" -n tellmewhy -g ninadkavimandan
+      
       - name: Open port 80 on VM
         run: az vm open-port --port 80 --resource-group ninadkavimandan --name tellmewhy
       
       - name: Setup IIS on windows VM
         run: az vm run-command invoke --command-id RunPowerShellScript --name tellmewhy -g ninadkavimandan --scripts 'Install-WindowsFeature -name Web-Server -IncludeManagementTools'
+      
+      - name: Copy index.html to IIS root
+        run: scp ./index.html sshUser@104.215.83.167:/NewDirectory/index.html && az vm run-command invoke --command-id RunPowerShellScript --name tellmewhy -g ninadkavimandan --scripts 'move NewDirectory/index.html C:/Inetpub/wwwroot/index.html'
       
       - name: Logout from Azure
         run: |
